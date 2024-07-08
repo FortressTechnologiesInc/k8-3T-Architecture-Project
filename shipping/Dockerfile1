@@ -1,21 +1,29 @@
-# Stage 1: Build
-FROM maven:3.8.1-openjdk-11-slim AS build
+#
+# Build
+#
+FROM debian:10 AS build
 
-WORKDIR /app
+RUN apt-get update && apt-get -y install maven
 
-COPY pom.xml .
-RUN mvn dependency:go-offline
+WORKDIR /opt/shipping
 
-COPY src ./src/
+COPY pom.xml /opt/shipping/
+RUN mvn dependency:resolve
+COPY src /opt/shipping/src/
 RUN mvn package
 
-# Stage 2: Runtime
-FROM openjdk:11-jre-slim
-
-WORKDIR /app
-
-COPY --from=build /app/target/my-java-app.jar .
+#
+# Run
+#
+FROM openjdk:8-jdk
 
 EXPOSE 8080
 
-CMD ["java", "-jar", "my-java-app.jar"]
+WORKDIR /opt/shipping
+
+ENV CART_ENDPOINT=cart:8080
+ENV DB_HOST=mysql
+
+COPY --from=build /opt/shipping/target/shipping-1.0.jar shipping.jar
+
+CMD [ "java", "-Xmn256m", "-Xmx768m", "-jar", "shipping.jar" ]
