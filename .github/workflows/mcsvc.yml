@@ -93,7 +93,7 @@ jobs:
       - name: Build and push shipping
         working-directory: shipping/
         run: |
-          docker build -t iscanprint/k8shipping:2.5 .
+          docker build -t iscanprint/k8shipping:2.5 . -f Dockerfile1
           docker push iscanprint/k8shipping:2.5
 
       - name: Build and push user
