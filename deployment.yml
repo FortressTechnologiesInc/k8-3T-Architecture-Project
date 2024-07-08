@@ -1,0 +1,494 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: web-config
+data:
+  CATALOGUE_HOST: catalogue
+  USER_HOST: user
+  SHIPPING_HOST: shipping
+  PAYMENT_HOST: payment
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: ${REPO}/rs-mongodb:${TAG}
+          resources:
+            limits:
+              cpu: 0.5
+              memory: 512Mi
+          ports:
+            - containerPort: 27017
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+spec:
+  selector:
+    app: mongodb
+  ports:
+    - port: 27017
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:6.2-alpine
+          resources:
+            limits:
+              cpu: 0.5
+              memory: 256Mi
+          ports:
+            - containerPort: 6379
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  selector:
+    app: redis
+  ports:
+    - port: 6379
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      containers:
+        - name: rabbitmq
+          image: rabbitmq:3.8-management-alpine
+          resources:
+            limits:
+              cpu: 0.5
+              memory: 512Mi
+          ports:
+            - containerPort: 5672
+            - containerPort: 15672
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+spec:
+  selector:
+    app: rabbitmq
+  ports:
+    - name: amqp
+      port: 5672
+    - name: management
+      port: 15672
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalogue
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: catalogue
+  template:
+    metadata:
+      labels:
+        app: catalogue
+    spec:
+      containers:
+        - name: catalogue
+          image: ${REPO}/rs-catalogue:${TAG}
+          resources:
+            limits:
+              cpu: 0.5
+              memory: 512Mi
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: web-config
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalogue
+spec:
+  selector:
+    app: catalogue
+  ports:
+    - port: 8080
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user
+  template:
+    metadata:
+      labels:
+        app: user
+    spec:
+      containers:
+        - name: user
+          image: ${REPO}/rs-user:${TAG}
+          resources:
+            limits:
+              cpu: 0.5
+              memory: 512Mi
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: web-config
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: user
+spec:
+  selector:
+    app: user
+  ports:
+    - port: 8080
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cart
+  template:
+    metadata:
+      labels:
+        app: cart
+    spec:
+      containers:
+        - name: cart
+          image: ${REPO}/rs-cart:${TAG}
+          resources:
+            limits:
+              cpu: 0.5
+              memory: 256Mi
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: web-config
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: cart
+spec:
+  selector:
+    app: cart
+  ports:
+    - port: 8080
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: ${REPO}/rs-mysql-db:${TAG}
+          resources:
+            limits:
+              cpu: 1
+              memory: 1Gi
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secrets
+                  key: password
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+spec:
+  selector:
+    app: mysql
+  ports:
+    - port: 3306
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shipping
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shipping
+  template:
+    metadata:
+      labels:
+        app: shipping
+    spec:
+      containers:
+        - name: shipping
+          image: ${REPO}/rs-shipping:${TAG}
+          resources:
+            limits:
+              cpu: 0.5
+              memory: 256Mi
+          ports:
+            - containerPort: 8080
+          env:
+            - name: MYSQL_HOST
+              value: "mysql"  # Name of MySQL service
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: shipping
+spec:
+  selector:
+    app: shipping
+  ports:
+    - port: 8080
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ratings
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ratings
+  template:
+    metadata:
+      labels:
+        app: ratings
+    spec:
+      containers:
+        - name: ratings
+          image: ${REPO}/rs-ratings:${TAG}
+          resources:
+            limits:
+              cpu: 0.5
+              memory: 256Mi
+          ports:
+            - containerPort: 80
+          env:
+            - name: MYSQL_HOST
+              value: "mysql"  # Name of MySQL service
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: ratings
+spec:
+  selector:
+    app: ratings
+  ports:
+    - port: 80
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment
+  template:
+    metadata:
+      labels:
+        app: payment
+    spec:
+      containers:
+        - name: payment
+          image: ${REPO}/rs-payment:${TAG}
+          resources:
+            limits:
+              cpu: 0.5
+              memory: 256Mi
+          ports:
+            - containerPort: 8080
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment
+spec:
+  selector:
+    app: payment
+  ports:
+    - port: 8080
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dispatch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dispatch
+  template:
+    metadata:
+      labels:
+        app: dispatch
+    spec:
+      containers:
+        - name: dispatch
+          image: ${REPO}/rs-dispatch:${TAG}
+          resources:
+            limits:
+              cpu: 0.5
+              memory: 256Mi
+          ports:
+            - containerPort: 8080
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: dispatch
+spec:
+  selector:
+    app: dispatch
+  ports:
+    - port: 8080
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web
+          image: ${REPO}/rs-web:${TAG}
+          resources:
+            limits:
+              cpu: 1
+              memory: 1Gi
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: web-config
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  selector:
+    app: web
+  ports:
+    - port: 8080
+  type: LoadBalancer  # Expose the service externally if needed
