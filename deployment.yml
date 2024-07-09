@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
         - name: mongodb
-          image: ${REPO}/rs-mongodb:${TAG}
+          image: robotshop/rs-mongodb
           resources:
             limits:
               cpu: 0.5
@@ -144,7 +144,8 @@ spec:
     spec:
       containers:
         - name: catalogue
-          image: ${REPO}/rs-catalogue:${TAG}
+          image: robotshop/rs-catalogue
+
           resources:
             limits:
               cpu: 0.5
@@ -185,7 +186,7 @@ spec:
     spec:
       containers:
         - name: user
-          image: ${REPO}/rs-user:${TAG}
+          image: robotshop/rs-user
           resources:
             limits:
               cpu: 0.5
@@ -226,7 +227,8 @@ spec:
     spec:
       containers:
         - name: cart
-          image: ${REPO}/rs-cart:${TAG}
+          image: robotshop/rs-cart
+
           resources:
             limits:
               cpu: 0.5
@@ -267,7 +269,7 @@ spec:
     spec:
       containers:
         - name: mysql
-          image: ${REPO}/rs-mysql-db:${TAG}
+          image: robotshop/rs-mysql-db
           resources:
             limits:
               cpu: 1
@@ -311,7 +313,7 @@ spec:
     spec:
       containers:
         - name: shipping
-          image: ${REPO}/rs-shipping:${TAG}
+          image: robotshop/rs-shipping
           resources:
             limits:
               cpu: 0.5
@@ -352,7 +354,7 @@ spec:
     spec:
       containers:
         - name: ratings
-          image: ${REPO}/rs-ratings:${TAG}
+          image: robotshop/rs-ratings
           resources:
             limits:
               cpu: 0.5
@@ -393,7 +395,7 @@ spec:
     spec:
       containers:
         - name: payment
-          image: ${REPO}/rs-payment:${TAG}
+          image: robotshop/rs-payment
           resources:
             limits:
               cpu: 0.5
@@ -431,7 +433,7 @@ spec:
     spec:
       containers:
         - name: dispatch
-          image: ${REPO}/rs-dispatch:${TAG}
+          image: robotshop/rs-dispatch
           resources:
             limits:
               cpu: 0.5
@@ -469,7 +471,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: ${REPO}/rs-web:${TAG}
+          image: robotshop/rs-web
           resources:
             limits:
               cpu: 1
@@ -491,4 +493,4 @@ spec:
     app: web
   ports:
     - port: 8080
-  type: LoadBalancer  # Expose the service externally if needed
+  type: NodePort  # Expose the service externally if needed
