@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Config here
-KEY="your unique key"
+KEY="nc7frMtdRdCUzIrsTBja9w"
 ENDPOINT="endpoint for your tennant"
 # end of config
 
