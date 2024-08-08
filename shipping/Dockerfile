@@ -1,5 +1,13 @@
+# Multi-stage Build
+
 # Build Stage
-FROM maven:3.8.6-openjdk-11 AS build
+FROM debian:10 AS build
+
+# Install dependencies
+RUN apt-get update && \
+    apt-get install -y openjdk-11-jdk maven && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/shipping
 
