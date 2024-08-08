@@ -36,6 +36,8 @@ jobs:
 
     - name: Deploy with Docker Compose
       run: |
+        docker-compose build
+        docker-compose push
         docker-compose pull  # Ensure images are up-to-date
         docker-compose up -d  # Deploy the application in detached mode
       env:
